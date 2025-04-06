@@ -1,0 +1,120 @@
+﻿@model EmployeeManagementSystem.Models.EmployeeViewModel
+@{
+    ViewBag.Title = "Employee Form";
+    Layout = null;
+}
+
+<div class="text-center mb-4">
+    <h2 class="text-primary" style="font-weight: bold;">Create Employee</h2>
+</div>
+
+<div class="d-flex justify-content-center">
+    <div class="border p-4 rounded shadow" style="width: 400px;">
+        @using (Html.BeginForm("Create", "Employee", FormMethod.Post, new { @id = "employeeForm" }))
+        {
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.Name)
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", required = "required" })
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.Designation)
+                @Html.TextBoxFor(m => m.Designation, new { @class = "form-control", required = "required" })
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.DateOfJoin)
+                @{
+                    var date = (Model != null && Model.DateOfJoin != DateTime.MinValue)
+                                ? Model.DateOfJoin.ToString("yyyy-MM-dd")
+                                : DateTime.Now.ToString("yyyy-MM-dd");
+                }
+
+                @Html.TextBoxFor(m => m.DateOfJoin, new
+                {
+                    @class = "form-control",
+                    type = "date",
+                    required = "required",
+                    @Value = date
+                })
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.Salary)
+                @Html.TextBoxFor(m => m.Salary, new { @class = "form-control", type = "number", required = "required" })
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.Label("Gender")
+                <div>
+                    @Html.RadioButtonFor(m => m.Gender, "Male") Male
+                    @Html.RadioButtonFor(m => m.Gender, "Female") Female
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.State, "State")
+                @Html.DropDownListFor(m => m.State, (IEnumerable<SelectListItem>)ViewBag.States, "-- Select State --", new { @class = "form-control", required = "required" })
+            </div>
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(m => m.DateOfBirth)
+                @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new
+ {
+     @class = "form-control",
+     type = "date",
+     required = "required",
+     @id = "DOB",
+     max = DateTime.Now.ToString("yyyy-MM-dd")
+ })
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Age</label>
+                <span id="Age" class="form-control-plaintext">-</span>
+            </div>
+
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-success me-2">Save</button>
+                <button type="button" class="btn btn-secondary" id="clearFormBtn">Clear</button>
+            </div>
+        }
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        // Age calculation logic
+        $('#DOB').on('change', function () {
+            var dobVal = $(this).val();
+            if (dobVal) {
+                var dob = new Date(dobVal);
+                var today = new Date();
+                var age = today.getFullYear() - dob.getFullYear();
+                var m = today.getMonth() - dob.getMonth();
+
+                if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                if (!isNaN(age) && age >= 0) {
+                    $('#Age').text(age);
+                } else {
+                    $('#Age').text('-');
+                }
+            } else {
+                $('#Age').text('-');
+            }
+        });
+
+        // Clear form logic
+        $('#clearFormBtn').click(function () {
+            $('#employeeForm')[0].reset(); 
+            $('#Age').text('-'); 
+        });
+
+    });
+</script>

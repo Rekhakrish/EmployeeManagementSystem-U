@@ -1,0 +1,48 @@
+﻿@model EmployeeManagementSystem.Models.EmployeeViewModel
+
+@using (Html.BeginForm("Edit", "Employee", FormMethod.Post, new { id = "editEmployeeForm" }))
+
+{
+    @Html.HiddenFor(m => m.EmployeeId)
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Name)
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Designation)
+        @Html.TextBoxFor(m => m.Designation, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.DateOfJoin)
+        @Html.TextBoxFor(m => m.DateOfJoin, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Salary)
+        @Html.TextBoxFor(m => m.Salary, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Gender)
+        @Html.TextBoxFor(m => m.Gender, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.State)
+        @Html.TextBoxFor(m => m.State, new { @class = "form-control" })
+    </div>
+    <button onclick="openEditModal(@item.EmployeeId)">Edit</button>
+    <button type="submit" class="btn btn-primary">Update</button>
+}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function openEditModal(id) {
+        $.get('/Employee/Edit/' + id, function (data) {
+            $('#editModalBody').html(data); // your modal content div
+            $('#editModal').modal('show');  // show the modal
+        });
+    }
+</script>

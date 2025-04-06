@@ -1,0 +1,189 @@
+﻿@model IEnumerable<EmployeeManagementSystem.Models.EmployeeViewModel>
+
+@using EmployeeManagementSystem.Models;
+
+@{
+    ViewBag.Title = "EmployeeList";
+    Layout = null;
+}
+@using (Html.BeginForm("Index", "Employee", FormMethod.Get))
+{
+    <p>
+        @Html.TextBox("searchTerm", ViewBag.SearchTerm as string, new { @class = "form-control", placeholder = "Search by name" })
+        <button type="submit" class="btn btn-primary mt-2">Search</button>
+    </p>
+}
+<div class="d-flex justify-content-end mb-3">
+    <a href="@Url.Action("Create", "Employee")" class="btn btn-success">
+        <b> Create Employee</b>
+    </a>
+</div>
+<br />
+<table id="employeeTable" border="1" style="width:100%; background-color:lightblue; font-family:Arial;">
+    <thead>
+        <tr style="background-color: #003366; color: white;">
+            <th><input type="checkbox" id="selectAll" /></th> <!-- Select all -->
+            <th>S.No.</th>
+            <th class="sortable" data-column="Name">Name</th>
+            <th class="sortable" data-column="Designation">Designation</th>
+            <th class="sortable" data-column="DateOfJoin">Date of Join</th>
+            <th class="sortable" data-column="Salary">Salary</th>
+            <th class="sortable" data-column="Gender">Gender</th>
+            <th class="sortable" data-column="State">State</th>
+            <th class="sortable" data-column="Action">Action</th>
+          
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int i = 1;
+        }
+
+        @foreach (var emp in Model)
+        {
+            <tr>
+                <td><input type="checkbox" class="selectItem" value="@emp.EmployeeId" /></td>
+                <td>@i</td>
+                <td>
+                    <a href="#" class="edit-link" data-id="@emp.EmployeeId">@emp.Name</a>
+                </td>
+                <td>@emp.Designation</td>
+                <td>@emp.DateOfJoin.ToShortDateString()</td>
+                <td class="salary">@emp.Salary</td>
+                <td>@emp.Gender</td>
+                <td>@emp.State</td>
+                <td>
+                    <a href="@Url.Action("Delete", "Employee", new { id = emp.EmployeeId })"
+                       onclick="return confirm('Are you sure to delete this?')">
+                        DELETE
+                    </a>
+                </td>
+            </tr>
+            i++;
+        }
+    </tbody>
+</table>
+<br />
+<div class="d-flex justify-content-between align-items-center mt-3" style="max-width: 600px;">
+    <button id="deleteSelected" class="btn btn-danger text-dark">Delete Selected</button>
+    <h5 class="mb-0">Total Salary: ₹ <span id="totalSalary">0.00</span></h5>
+</div>
+
+<div class="d-flex justify-content-between mt-3">
+    @if (ViewBag.CurrentPage > 1)
+    {
+        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, page = ViewBag.CurrentPage - 1 })" class="btn btn-outline-primary">Previous</a>
+    }
+
+    <span>Page @ViewBag.CurrentPage of @ViewBag.TotalPages</span>
+
+    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+    {
+        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, page = ViewBag.CurrentPage + 1 })" class="btn btn-outline-primary">Next</a>
+    }
+</div>
+<style>
+     #deleteSelected {
+        border: 1px solid black;
+        padding: 5px 15px;
+    }
+
+    #totalSalary {
+        font-weight: bold;
+    }
+    #employeeTable tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #employeeTable tbody tr:nth-child(odd) {
+        background-color: #e6f7ff;
+    }
+
+    #employeeTable {
+        border-collapse: collapse;
+    }
+
+        #employeeTable th, #employeeTable td {
+            padding: 10px;
+            text-align: center;
+        }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let sortDirection = 1;
+
+        $('.sortable').on('click', function () {
+            const column = $(this).data('column');
+            const table = $('#employeeTable tbody');
+            const rows = table.find('tr').toArray();
+
+            rows.sort(function (a, b) {
+                let aText = $(a).find('td').eq($(this).index()).text().trim();
+                let bText = $(b).find('td').eq($(this).index()).text().trim();
+
+                // Handle numeric sort if possible
+                let aNum = parseFloat(aText.replace(/[^0-9.-]+/g, ""));
+                let bNum = parseFloat(bText.replace(/[^0-9.-]+/g, ""));
+                let isNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+                if (isNumeric) {
+                    return (aNum - bNum) * sortDirection;
+                } else {
+                    return aText.localeCompare(bText) * sortDirection;
+                }
+            }.bind(this));
+
+            sortDirection *= -1;
+
+            $.each(rows, function (index, row) {
+                table.append(row);
+            });
+        });
+    });
+    $(document).ready(function () {
+        let total = 0;
+        $(".salary").each(function () {
+            let salary = parseFloat($(this).text()) || 0;
+            total += salary;
+        });
+        $("#totalSalary").text(total.toFixed(2));
+    });
+    $(document).ready(function () {
+        // Select/Deselect All
+        $('#selectAll').on('change', function () {
+            $('.selectItem').prop('checked', this.checked);
+        });
+
+        // Delete Selected
+        $('#deleteSelected').on('click', function () {
+            var selectedIds = $('.selectItem:checked').map(function () {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) {
+                alert("Please select at least one employee to delete.");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to delete the selected employees?")) {
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteMultiple", "Employee")',
+                data: JSON.stringify({ ids: selectedIds }),
+                contentType: "application/json; charset=utf-8",
+                success: function (result) {
+                    alert(result.message);
+                    location.reload();
+                },
+                error: function () {
+                    alert("An error occurred while deleting records.");
+                }
+            });
+        });
+    });
+    
+</script>
